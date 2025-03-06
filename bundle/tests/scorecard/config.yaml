@@ -3,6 +3,15 @@ kind: Configuration
 metadata:
   name: config
 stages:
+- parallel: false
+  tests:
+  - entrypoint:
+    - custom-scorecard
+    - hello-world
+    image: docker.io/shivamkz/memcached-custom-scorecard:v1.0.0
+    labels:
+      suite: custom
+      test: hello-world
 - parallel: true
   tests:
   - entrypoint:
