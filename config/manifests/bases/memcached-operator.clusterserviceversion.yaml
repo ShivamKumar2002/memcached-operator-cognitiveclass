@@ -14,6 +14,11 @@ spec:
       displayName: Memcached
       kind: Memcached
       name: memcacheds.cache.shivamkumar.dev
+      version: v1beta1
+    - description: Memcached is the Schema for the memcacheds API
+      displayName: Memcached
+      kind: Memcached
+      name: memcacheds.cache.shivamkumar.dev
       version: v1alpha1
   description: Created while learning
   displayName: memcached-operator

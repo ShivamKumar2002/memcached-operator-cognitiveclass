@@ -20,4 +20,12 @@ resources:
   kind: Memcached
   path: memcached-operator/api/v1alpha1
   version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  domain: shivamkumar.dev
+  group: cache
+  kind: Memcached
+  path: memcached-operator/api/v1beta1
+  version: v1beta1
 version: "3"

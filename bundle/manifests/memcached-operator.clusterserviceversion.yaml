@@ -20,13 +20,28 @@ metadata:
           "spec": {
             "size": 3
           }
+        },
+        {
+          "apiVersion": "cache.shivamkumar.dev/v1beta1",
+          "kind": "Memcached",
+          "metadata": {
+            "labels": {
+              "app.kubernetes.io/created-by": "memcached-operator",
+              "app.kubernetes.io/instance": "memcached-sample",
+              "app.kubernetes.io/managed-by": "kustomize",
+              "app.kubernetes.io/name": "memcached",
+              "app.kubernetes.io/part-of": "memcached-operator"
+            },
+            "name": "memcached-sample"
+          },
+          "spec": null
         }
       ]
     capabilities: Basic Install
-    createdAt: "2025-03-06T18:24:13Z"
+    createdAt: "2025-03-06T18:46:31Z"
     operators.operatorframework.io/builder: operator-sdk-unknown
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v4
-  name: memcached-operator.v1.0.0
+  name: memcached-operator.v2.0.0
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -37,6 +52,11 @@ spec:
       kind: Memcached
       name: memcacheds.cache.shivamkumar.dev
       version: v1alpha1
+    - description: Memcached is the Schema for the memcacheds API
+      displayName: Memcached
+      kind: Memcached
+      name: memcacheds.cache.shivamkumar.dev
+      version: v1beta1
   description: Created while learning
   displayName: memcached-operator
   icon:
@@ -158,7 +178,7 @@ spec:
                 - --leader-elect
                 command:
                 - /manager
-                image: docker.io/shivamkz/memcached-operator-cognitiveclass:v1.0.0
+                image: docker.io/shivamkz/memcached-operator-cognitiveclass:v2.0.0
                 livenessProbe:
                   httpGet:
                     path: /healthz
@@ -243,4 +263,4 @@ spec:
   maturity: alpha
   provider:
     name: shivam
-  version: 1.0.0
+  version: 2.0.0

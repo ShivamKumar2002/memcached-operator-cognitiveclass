@@ -32,7 +32,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	cachev1alpha1 "memcached-operator/api/v1alpha1"
+	cachev1beta1 "memcached-operator/api/v1beta1"
 )
 
 // MemcachedReconciler reconciles a Memcached object
@@ -60,7 +60,7 @@ func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	logger := log.FromContext(ctx)
 
 	// fetch the Memcached instance
-	memcached := &cachev1alpha1.Memcached{}
+	memcached := &cachev1beta1.Memcached{}
 	if err := r.Get(ctx, req.NamespacedName, memcached); err != nil {
 		if errors.IsNotFound(err) {
 			logger.Info("Memcached resource not found, ignoring since the object has been deleted")
@@ -135,7 +135,7 @@ func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	return ctrl.Result{}, nil
 }
 
-func (r *MemcachedReconciler) createNewDeployment(ctx context.Context, logger logr.Logger, memcached *cachev1alpha1.Memcached) error {
+func (r *MemcachedReconciler) createNewDeployment(ctx context.Context, logger logr.Logger, memcached *cachev1beta1.Memcached) error {
 	newDeployment := r.getNewDeployment(memcached)
 	logger.Info("Creating a new Deployment for Memcached", "Deployment.Namespace", newDeployment.Namespace, "Deployment.Name", newDeployment.Name)
 
@@ -147,7 +147,7 @@ func (r *MemcachedReconciler) createNewDeployment(ctx context.Context, logger lo
 	return nil
 }
 
-func (r *MemcachedReconciler) getNewDeployment(memcached *cachev1alpha1.Memcached) *appsv1.Deployment {
+func (r *MemcachedReconciler) getNewDeployment(memcached *cachev1beta1.Memcached) *appsv1.Deployment {
 	labels := getLabelsForMemcached(memcached)
 	replicas := int32(memcached.Spec.Size)
 	deployment := &appsv1.Deployment{
@@ -166,8 +166,9 @@ func (r *MemcachedReconciler) getNewDeployment(memcached *cachev1alpha1.Memcache
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{{
-						Name:  "memcached",
-						Image: "memcached:1.6.37-alpine",
+						Name:    "memcached",
+						Image:   "memcached:1.6.37-alpine",
+						Command: []string{"memcached"},
 						Ports: []corev1.ContainerPort{{
 							Name:          "memcached",
 							ContainerPort: 11211,
@@ -179,13 +180,18 @@ func (r *MemcachedReconciler) getNewDeployment(memcached *cachev1alpha1.Memcache
 		},
 	}
 
+	// Check for disable evictions config
+	if memcached.Spec.DisableEvictions {
+		deployment.Spec.Template.Spec.Containers[0].Command = append(deployment.Spec.Template.Spec.Containers[0].Command, "--disable-evictions")
+	}
+
 	// set the owner of the Deployment to the Memcached instance
 	ctrl.SetControllerReference(memcached, deployment, r.Scheme)
 
 	return deployment
 }
 
-func getLabelsForMemcached(memcached *cachev1alpha1.Memcached) map[string]string {
+func getLabelsForMemcached(memcached *cachev1beta1.Memcached) map[string]string {
 	return map[string]string{"app": "memcached", "memcached_cr": memcached.Name}
 }
 
@@ -200,6 +206,6 @@ func getNameFromPodList(pods *corev1.PodList) []string {
 // SetupWithManager sets up the controller with the Manager.
 func (r *MemcachedReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&cachev1alpha1.Memcached{}).
+		For(&cachev1beta1.Memcached{}).
 		Complete(r)
 }
