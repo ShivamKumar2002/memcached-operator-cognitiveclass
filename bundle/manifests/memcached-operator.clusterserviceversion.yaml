@@ -34,14 +34,17 @@ metadata:
             },
             "name": "memcached-sample"
           },
-          "spec": null
+          "spec": {
+            "disableEvictions": true,
+            "size": 3
+          }
         }
       ]
     capabilities: Basic Install
-    createdAt: "2025-03-06T18:46:31Z"
+    createdAt: "2025-03-06T19:24:42Z"
     operators.operatorframework.io/builder: operator-sdk-unknown
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v4
-  name: memcached-operator.v2.0.0
+  name: memcached-operator.v2.0.1
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -150,6 +153,46 @@ spec:
             spec:
               containers:
               - args:
+                - --health-probe-bind-address=:8081
+                - --metrics-bind-address=127.0.0.1:8080
+                - --leader-elect
+                command:
+                - /manager
+                image: docker.io/shivamkz/memcached-operator-cognitiveclass:v2.0.1
+                livenessProbe:
+                  httpGet:
+                    path: /healthz
+                    port: 8081
+                  initialDelaySeconds: 15
+                  periodSeconds: 20
+                name: manager
+                ports:
+                - containerPort: 9443
+                  name: webhook-server
+                  protocol: TCP
+                readinessProbe:
+                  httpGet:
+                    path: /readyz
+                    port: 8081
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+                resources:
+                  limits:
+                    cpu: 500m
+                    memory: 128Mi
+                  requests:
+                    cpu: 10m
+                    memory: 64Mi
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  capabilities:
+                    drop:
+                    - ALL
+                volumeMounts:
+                - mountPath: /tmp/k8s-webhook-server/serving-certs
+                  name: cert
+                  readOnly: true
+              - args:
                 - --secure-listen-address=0.0.0.0:8443
                 - --upstream=http://127.0.0.1:8080/
                 - --logtostderr=true
@@ -172,42 +215,15 @@ spec:
                   capabilities:
                     drop:
                     - ALL
-              - args:
-                - --health-probe-bind-address=:8081
-                - --metrics-bind-address=127.0.0.1:8080
-                - --leader-elect
-                command:
-                - /manager
-                image: docker.io/shivamkz/memcached-operator-cognitiveclass:v2.0.0
-                livenessProbe:
-                  httpGet:
-                    path: /healthz
-                    port: 8081
-                  initialDelaySeconds: 15
-                  periodSeconds: 20
-                name: manager
-                readinessProbe:
-                  httpGet:
-                    path: /readyz
-                    port: 8081
-                  initialDelaySeconds: 5
-                  periodSeconds: 10
-                resources:
-                  limits:
-                    cpu: 500m
-                    memory: 128Mi
-                  requests:
-                    cpu: 10m
-                    memory: 64Mi
-                securityContext:
-                  allowPrivilegeEscalation: false
-                  capabilities:
-                    drop:
-                    - ALL
               securityContext:
                 runAsNonRoot: true
               serviceAccountName: memcached-operator-controller-manager
               terminationGracePeriodSeconds: 10
+              volumes:
+              - name: cert
+                secret:
+                  defaultMode: 420
+                  secretName: webhook-server-cert
       permissions:
       - rules:
         - apiGroups:
@@ -263,4 +279,17 @@ spec:
   maturity: alpha
   provider:
     name: shivam
-  version: 2.0.0
+  version: 2.0.1
+  webhookdefinitions:
+  - admissionReviewVersions:
+    - v1alpha1
+    - v1beta1
+    containerPort: 443
+    conversionCRDs:
+    - memcacheds.cache.shivamkumar.dev
+    deploymentName: memcached-operator-controller-manager
+    generateName: cmemcacheds.kb.io
+    sideEffects: None
+    targetPort: 9443
+    type: ConversionWebhook
+    webhookPath: /convert

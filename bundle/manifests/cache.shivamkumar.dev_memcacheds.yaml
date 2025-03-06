@@ -6,6 +6,17 @@ metadata:
   creationTimestamp: null
   name: memcacheds.cache.shivamkumar.dev
 spec:
+  conversion:
+    strategy: Webhook
+    webhook:
+      clientConfig:
+        service:
+          name: memcached-operator-webhook-service
+          namespace: memcached-operator-system
+          path: /convert
+      conversionReviewVersions:
+      - v1alpha1
+      - v1beta1
   group: cache.shivamkumar.dev
   names:
     kind: Memcached

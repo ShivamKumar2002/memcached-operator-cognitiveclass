@@ -17,7 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"errors"
+	cachev1beta1 "memcached-operator/api/v1beta1"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/conversion"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -51,6 +55,38 @@ type Memcached struct {
 
 	Spec   MemcachedSpec   `json:"spec,omitempty"`
 	Status MemcachedStatus `json:"status,omitempty"`
+}
+
+// ConvertTo converts this version (v1alpha1) to the Hub version (v1beta1)
+func (m *Memcached) ConvertTo(rawDestination conversion.Hub) error {
+	destination, ok := rawDestination.(*cachev1beta1.Memcached)
+	if !ok {
+		return errors.New("destination type is not cachev1beta1.Memcached")
+	}
+
+	destination.ObjectMeta = m.ObjectMeta
+	destination.Spec.DisableEvictions = true
+	destination.Spec.Size = m.Spec.Size
+
+	destination.Status.Nodes = m.Status.Nodes
+
+	return nil
+}
+
+// ConvertFrom converts from the Hub version (v1beta1) to this version (v1alpha1)
+func (m *Memcached) ConvertFrom(rawSource conversion.Hub) error {
+	source, ok := rawSource.(*cachev1beta1.Memcached)
+	if !ok {
+		return errors.New("source type is not cachev1beta1.Memcached")
+	}
+
+	m.ObjectMeta = source.ObjectMeta
+
+	m.Spec.Size = source.Spec.Size
+
+	m.Status.Nodes = source.Status.Nodes
+
+	return nil
 }
 
 //+kubebuilder:object:root=true

@@ -57,6 +57,10 @@ type Memcached struct {
 	Status MemcachedStatus `json:"status,omitempty"`
 }
 
+// Hub marks this type as a conversion hub
+func (m *Memcached) Hub() {
+}
+
 //+kubebuilder:object:root=true
 
 // MemcachedList contains a list of Memcached
