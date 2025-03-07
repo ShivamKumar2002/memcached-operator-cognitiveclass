@@ -7,8 +7,15 @@ stages:
   tests:
   - entrypoint:
     - custom-scorecard
+    - basic-standup
+    image: docker.io/shivamkz/memcached-custom-scorecard:v1.0.1
+    labels:
+      suite: custom
+      test: basic-standup
+  - entrypoint:
+    - custom-scorecard
     - hello-world
-    image: docker.io/shivamkz/memcached-custom-scorecard:v1.0.0
+    image: docker.io/shivamkz/memcached-custom-scorecard:v1.0.1
     labels:
       suite: custom
       test: hello-world
